@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const BASE_NUM_API_URL = 'http://numbersapi.com/';
 
@@ -31,4 +31,37 @@ async function showNumberRace(numbers) {
     console.log(winner.text);
 }
 
-showNumberRace([5, 6, 7, 8])
+showNumberRace([5, 6, 7, 8]);
+
+/**takes an array a few numbers and log promises or error messages */
+async function showNumberAll(numbers) {
+    const firstResponse = fetch(`${BASE_NUM_API_URL}${numbers[0]}?json`);
+    const secondResponse = fetch(`${BASE_NUM_API_URL}${numbers[1]}?json`);
+    const thirdResponse = fetch(`${BASE_NUM_API_URL}${numbers[2]}?json`);
+
+    const promiseResult = await Promise.allSettled(
+        [firstResponse,
+            secondResponse,
+            thirdResponse]);
+
+
+    const successResult = [];
+    const failResult = [];
+
+    for (let item of promiseResult) {
+
+        if (item.value.status === 404) {
+            failResult.push(item.value.statusText);
+            // console.log(item.value.statusText);
+        } else {
+
+            const result = await item.value.json();
+            // console.log(result.text);
+            successResult.push(result.text);
+        }
+    }
+    console.log('Sucessful cases:', successResult, 'Failed cases', failResult);
+
+}
+
+showNumberAll(['wrong', 3, 4]);
