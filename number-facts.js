@@ -40,7 +40,7 @@ async function showNumberAll(numbers) {
             const result = await item.value.json();
             successResult.push(result.text);
 
-        } else {
+        } else if (item.status === "fulfilled" && item.value.ok === false) {
             failResult.push(item.value.statusText);
         }
 
