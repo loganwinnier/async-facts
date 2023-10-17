@@ -8,60 +8,53 @@ async function showNumberTrivia(number) {
     const response = await fetch(`${BASE_NUM_API_URL}${number}?json`);
     const data = await response.json();
 
-    console.log(data.text);
+    console.log("number trivia:", data.text);
 }
 
 // showNumberTrivia(12)
 
 /** takes an array of 4 numbers and logs the first response from numbers API */
 async function showNumberRace(numbers) {
-    const firstResponse = fetch(`${BASE_NUM_API_URL}${numbers[0]}?json`);
-    const secondResponse = fetch(`${BASE_NUM_API_URL}${numbers[1]}?json`);
-    const thirdResponse = fetch(`${BASE_NUM_API_URL}${numbers[2]}?json`);
-    const fourthResponse = fetch(`${BASE_NUM_API_URL}${numbers[3]}?json`);
+    const promises = numbers.map(num => fetch(`${BASE_NUM_API_URL}${num}?json`))
 
-    const winnerPromise = Promise.race(
-        [firstResponse,
-            secondResponse,
-            thirdResponse,
-            fourthResponse]);
+    const winnerResponse = await Promise.race(promises);
 
-    const winnerJSON = await winnerPromise;
-    const winner = await winnerJSON.json();
-    console.log(winner.text);
+    const winner = await winnerResponse.json();
+    console.log("number race result:", winner.text);
 }
 
-showNumberRace([5, 6, 7, 8]);
+//showNumberRace([5, 6, 7, 8]);
 
 /**takes an array a few numbers and log promises or error messages */
 async function showNumberAll(numbers) {
-    const firstResponse = fetch(`${BASE_NUM_API_URL}${numbers[0]}?json`);
-    const secondResponse = fetch(`${BASE_NUM_API_URL}${numbers[1]}?json`);
-    const thirdResponse = fetch(`${BASE_NUM_API_URL}${numbers[2]}?json`);
+    const promises = numbers.map(num => fetch(`${BASE_NUM_API_URL}${num}?json`))
 
-    const promiseResult = await Promise.allSettled(
-        [firstResponse,
-            secondResponse,
-            thirdResponse]);
 
+    const settledResponses = await Promise.allSettled(promises);
 
     const successResult = [];
     const failResult = [];
 
-    for (let item of promiseResult) {
-
-        if (item.value.status === 404) {
-            failResult.push(item.value.statusText);
-            // console.log(item.value.statusText);
-        } else {
-
+    for (let item of settledResponses) {
+        if (item.status === "fulfilled" && item.value.ok === true) {
             const result = await item.value.json();
-            // console.log(result.text);
             successResult.push(result.text);
+
+        } else {
+            failResult.push(item.value.statusText);
         }
+
     }
     console.log('Sucessful cases:', successResult, 'Failed cases', failResult);
+}
+//showNumberAll(['wrong', 3, 4]);
 
+/** main: calls showNumberTrivia, showNumberRace, showNumberAll, in order and
+ * moves onto next function when previous completes */
+async function main() {
+    await showNumberTrivia(5);
+    await showNumberRace([300, 101, 99, 102]);
+    await showNumberAll(['wrong', 8, 10])
 }
 
-showNumberAll(['wrong', 3, 4]);
+main()
